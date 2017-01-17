@@ -25,6 +25,7 @@ import sys
 import six
 import wrapt
 from werkzeug.debug.tbtools import get_current_traceback
+from werkzeug.exceptions import HTTPException
 
 import typedjsonrpc.parameter_checker as parameter_checker
 from .errors import Error, InternalError, InvalidRequestError, MethodNotFoundError, ParseError
@@ -131,6 +132,8 @@ class Registry(object):
     def _handle_exceptions(self, method, is_notification=False, msg_id=None):
         try:
             return method(), False
+        except HTTPException:
+            raise
         except Error as exc:
             if not is_notification:
                 if self.debug:

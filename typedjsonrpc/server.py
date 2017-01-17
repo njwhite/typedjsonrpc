@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function
 from threading import Lock
 
 from werkzeug.debug import DebuggedApplication
-from werkzeug.exceptions import abort
+from werkzeug.exceptions import abort, HTTPException
 from werkzeug.local import Local, LocalManager, LocalProxy
 from werkzeug.routing import Map, Rule
 from werkzeug.serving import run_simple
@@ -104,8 +104,11 @@ class Server(object):
         def _wrapped_app(environ, start_response):
             request = Request(environ)
             setattr(_local, _CURRENT_REQUEST_KEY, request)
-            response = self._dispatch_request(request)
-            return response(environ, start_response)
+            try:
+                response = self._dispatch_request(request)
+                return response(environ, start_response)
+            except HTTPException, exc:
+                return exc(environ, start_response)
         return _wrapped_app(environ, start_response)
 
     def __call__(self, environ, start_response):
